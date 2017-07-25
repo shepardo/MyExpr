@@ -1,0 +1,72 @@
+parser grammar MyExprParser;
+
+options {
+	language=CSharp3;
+	tokenVocab=MyExprLexer;
+	output=AST;
+}
+
+tokens {
+	TOK_EXPR;
+}
+
+@parser::namespace { MyExpr.Parser }
+
+
+
+
+public
+program
+	: stmt* EOF
+	;
+
+stmt
+	:	(
+		( (IDENTIFIER ASSIGN) => assign	 -> assign )
+	|	expr	-> expr
+		)
+		SEMICOLON
+	;
+
+assign
+	: id=IDENTIFIER ASSIGN expr	-> ^(ASSIGN $id expr)
+	;
+
+/*
+expr 
+	:	(
+		( expr '+' term )
+	|	( expr '-' term )
+	|	(term)
+	) EOF
+	;*/
+expr
+	:	term rest	-> ^(TOK_EXPR term rest?)
+	;
+
+rest
+	:	PLUS term rest	-> ^(PLUS term rest?)
+	|	MINUS term rest	-> ^(MINUS term rest?)
+	| /* nothing */
+	;	
+
+term
+	:	INT_NUMBER	-> ^(INT_NUMBER)
+	|	IDENTIFIER	-> ^(IDENTIFIER)
+	;
+	catch[ NoViableAltException nvae ] 
+	{
+	    if(nvae.DecisionNumber == 4) {
+		    nvae = new NoViableAltException( 
+				"operand expected", 0/* nvae.DecisionNumber */, 0 /* nvae.StateNumber*/, nvae.Input );		
+		}
+		ReportError(nvae);
+		Recover(input,nvae);
+		retval.Tree = (object)adaptor.ErrorNode(input, retval.Start, input.LT(-1), nvae);
+	}
+	catch [RecognitionException re]
+	{
+		ReportError(re);
+		Recover(input,re);
+		retval.Tree = (object)adaptor.ErrorNode(input, retval.Start, input.LT(-1), re);
+	}

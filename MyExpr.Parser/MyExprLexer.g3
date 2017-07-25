@@ -1,0 +1,56 @@
+﻿lexer grammar MyExprLexer;
+
+options {
+    language=CSharp3;
+    TokenLabelType=CommonToken;
+}
+
+@namespace{MyExpr.Parser}
+
+fragment
+DIGIT
+	:	'0'..'9' 
+	;
+
+fragment
+DOT
+	: '.'
+	;
+
+NUMBER
+	:	
+	(	
+			DOT DIGIT+ // .02343
+		|	INT_NUMBER DOT DIGIT*	// 13212.	or	12334.234234
+		)
+		('E' DIGIT+)?
+		/*
+		(	INT_NUMBER			// 1434
+		|	DOT DIGIT+		// .02343
+		|	INT_NUMBER DOT DIGIT*	// 13212.	or	12334.234234
+		)
+		('E' DIGIT+)?*/
+	;
+
+INT_NUMBER
+	:	DIGIT+					// 1434
+	;
+
+ASSIGN		:	':=';
+PLUS		:	'+';
+MINUS 		:	'-';
+MULT		:	'*';
+DIVISION	:	'/';
+MODULO		:	'%';
+
+WS
+    :	(' ' | '\t' | '\n' | '\r')+ { $channel=TokenChannels.Hidden; }
+    ;
+
+IDENTIFIER  
+	:	('A'..'Z'|'_') ('0'..'9'|'A'..'Z'|'_')* 
+	;
+
+SEMICOLON
+	:	';'
+	;
